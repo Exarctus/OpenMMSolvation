@@ -45,7 +45,7 @@ modeller = Modeller(ligand_pdb.topology, ligand_pdb.positions)
 
 modeller.addSolvent(system_generator.forcefield, model='tip4pew', padding=12.0 * unit.angstroms)
 
-system = system_generator.forcefield.createSystem(modeller.topology, nonbondedMethod=PME,
+system = system_generator.forcefield.createSystem(modeller.topology, nonbondedMethod=CutoffPeriodic,
         nonbondedCutoff=9.0 * unit.angstroms, constraints=HBonds)
 
 '''
@@ -59,7 +59,7 @@ system = system_generator.forcefield.createSystem(modeller.topology, nonbondedMe
 # determines solute indexes
 solute_indexes = collect_solute_indexes(modeller.topology)
 
-factory = alchemy.AbsoluteAlchemicalFactory(alchemical_pme_treatment='direct-space')
+factory = alchemy.AbsoluteAlchemicalFactory()
 
 # Want to retain alchemical-alchemical nonbonded interactions as these are included in the decoupled endpoint solute + solvent system
 alchemical_region = alchemy.AlchemicalRegion(alchemical_atoms=solute_indexes, annihilate_electrostatics=False, annihilate_sterics=False)
@@ -86,6 +86,7 @@ alchemical_system.addForce(MonteCarloBarostat(1 * unit.bar, 300 * unit.kelvin))
 integrator = LangevinIntegrator(300 * unit.kelvin, 1.0 / unit.picoseconds, 0.002 * unit.picoseconds)
 
 context = Context(alchemical_system, integrator, platform)
+
 context.setPositions(modeller.positions)
 
 # below corresponds to fully interacting state
@@ -119,20 +120,21 @@ electrostatics_grid = np.linspace(1.0, 0.0, 10)
 
 print ("ELECTROSTATICS")
 print ("lambda", "<dV/dl>")
+
 for l in electrostatics_grid:
     
     alchemical_state.lambda_electrostatics = l
     alchemical_state.apply_to_context(context)
     
-    # equilibrate for 50ps before collecting data for 100ps, taking dV/dl every 1ps
-    integrator.step(25000)
+    # equilibrate for 100ps before collecting data for 500ps, taking dV/dl every 0.5ps
+    integrator.step(50000)
 
     Es = []
     dV = []
     
     # data collection loop
     for iteration in range(1000):
-        integrator.step(50)  
+        integrator.step(250)  
         
         state = context.getState(getEnergy=True, getParameterDerivatives=True)
         energy = state.getPotentialEnergy()
@@ -147,12 +149,15 @@ for l in electrostatics_grid:
     print ("%5.2f %5.2f" % (l, np.average(dV)))
 
 # use trapezoidal to integrate
-dG_electrostatics = np.trapz(dVe, dx=1.0 / (len(electrostatics_grid) - 1))
+dG_electrostatics = np.trapz(dVe, x=electrostatics_grid)
 print ("dG electrostatics,", dG_electrostatics)
 dVs = []
 
-sterics_grid = np.linspace(1.0, 0.0, 20)
+alchemical_state.lambda_electrostatics = 0.0
+alchemical_state.apply_to_context(context)
     
+sterics_grid = np.linspace(1.0, 0.0, 20)
+
 print ("STERICS")
 print ("lambda", "<dV/dl>")
 for l in sterics_grid:
@@ -160,12 +165,12 @@ for l in sterics_grid:
     alchemical_state.lambda_sterics = l
     alchemical_state.apply_to_context(context)
     
-    integrator.step(25000)
+    integrator.step(50000)
 
     Es = []
     dV = []
     for iteration in range(1000):
-        integrator.step(50) 
+        integrator.step(250) 
         
         state = context.getState(getEnergy=True, getParameterDerivatives=True)
         energy = state.getPotentialEnergy()
@@ -179,20 +184,20 @@ for l in sterics_grid:
     
     print ("%5.2f %5.2f" % (l, np.average(dV)))
  
-dG_sterics = np.trapz(dVs, dx=1.0 / (len(sterics_grid) - 1))
+dG_sterics = np.trapz(dVs, x=sterics_grid)
 
 print ("dG sterics,", dG_sterics)
 print ("dG", dG_electrostatics + dG_sterics)
-
+ 
 import matplotlib.pyplot as plt
 from matplotlib import rc
 rc('text', usetex=True)
-
+ 
 plt.plot(electrostatics_grid, dVe, label='electrostatics')
 plt.plot(sterics_grid, dVs, label='sterics')
 plt.legend()
-
+ 
 plt.xlabel(r'$\lambda$')
 plt.ylabel(r'$\left <\frac{\partial U}{\partial \lambda}\right >$')
-
+ 
 plt.savefig('dvdl.png')

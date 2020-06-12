@@ -1,8 +1,8 @@
-#Hydration Free Energy of Ethanol with OpenMM
+# Hydration Free Energy of Ethanol with OpenMM
 
 This repository attempts to calculate the free energy of solvation of ethanol in water at standard temperature and pressure using openmm, openmmtools and openmmforcefields.
 
-##Theory
+## Theory
 
 The free energy of solvation can be obtained by integrating the work done along the path connecting the non-interacting state A and the fully interacting state B.
 
@@ -25,10 +25,10 @@ In this project, the above integral was split into two steps:
 1. Smoothly turn off the electrostatic contributions.
 2. Smoothly turn off the lennard jones contributions.
 
-for the electrostatic component, a grid of 10 lambda windows was used, while for the steric component 20 were used. All lambda windows were first equilibrated for 50ps in the NPT ensemble before averages of the hybrid-hamiltonian derivative were taken for 100ps.
+for the electrostatic component, a grid of 10 lambda windows was used, while for the steric component 20 were used. All lambda windows were first equilibrated for 100ps in the NPT ensemble before averages of the hybrid-hamiltonian derivative were taken for 500ps.
 
 
-##Use & Implementational Details
+## Use & Implementational Details
 
 To use the code, simply type:
 
@@ -97,7 +97,7 @@ energy_deriv = energy_derivs['lambda_electrostatics']
 
 and finally the energy derivatives are integrated with a simple trapezium scheme.
 
-##Issues
+## Issues
 
 The free energy of solvation that this code produces are significantly different from literature. I'm using the work from Steinbrecher et. al. [here](https://onlinelibrary.wiley.com/doi/full/10.1002/jcc.21909) to compare against. In this work they use the GAFF forcefield and identical equilibration/production times as above, but they produce a solvation free energy of -4.3 kcal/mol (-18kJ/mol).  The code here produces 0.76 kJ/mol.
 
