@@ -33,7 +33,7 @@ for the electrostatic component, a grid of 10 lambda windows was used, while for
 To use the code, simply type:
 
 ```python
-python3 run_alchemy.py
+python3 TI_ethanol_pme.py
 ```
 
 Here's a brief summary of what the code does:
