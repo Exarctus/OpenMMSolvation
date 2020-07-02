@@ -74,6 +74,7 @@ def remake_system(system, solute_indexes, cutoff=9.0 * unit.angstroms, switching
         [charge, sigma, epsilon] = nonbonded_force.getParticleParameters(particle_index)
 
         if particle_index in alchemical_atoms:
+            # not necessary as this force gets deleted, but can't hurt.
             nonbonded_force.setParticleParameters(particle_index, abs(0.0 * charge), sigma, abs(0 * epsilon))
                     
     for ind in range(nonbonded_force.getNumExceptions()):
@@ -102,7 +103,7 @@ def remake_system(system, solute_indexes, cutoff=9.0 * unit.angstroms, switching
                 electrostatics_bond.addBond(iatom, jatom, [chargeprod])
 
         if at_least_one_alchemical:
-            # this isn't necessary as this force gets deleted from the new system and replaced
+            # not necessary as this force gets deleted, but can't hurt.
             nonbonded_force.setExceptionParameters(ind, iatom, jatom, abs(0.0 * chargeprod), sigma, abs(0.0 * epsilon))
         
     electrostatics.addInteractionGroup(alchemical_atoms, alchemical_atoms)
