@@ -3,7 +3,7 @@
 
 This repository was originally intended to calculate the free energy of solvation of ethanol in water at standard temperature and pressure using openmm, openmmtools and openmmforcefields. First, however, it seems there's an issue with how CustomNonbondedForce implements/uses switching functions to remove energy discontinuity at the cutoff. 
 
-##Requirements
+## Requirements
 
 openmm
 
