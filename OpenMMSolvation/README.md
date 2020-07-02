@@ -4,8 +4,11 @@
 This repository was originally intended to calculate the free energy of solvation of ethanol in water at standard temperature and pressure using openmm, openmmtools and openmmforcefields. First, however, it seems there's an issue with how CustomNonbondedForce implements/uses switching functions to remove energy discontinuity at the cutoff. 
 
 ##Requirements
+
 openmm
+
 openmmtools
+
 openmmforcefields
 
 ## Using Alchemy.py and Implementational Details
@@ -106,6 +109,14 @@ Finally, the original NonbondedForce gets deleted, and replaced by all the custo
 Using a switching function starting at 7.5 angstroms leads to identical issues as with alchemy.py.
 
 **It should be noted, that running dynamics with a normal NonbondedForce (not custom) seems to be perfectly capable of handling SwitchingFunctions, it seems it's only when using CustomNonbondedForce that the issues arise**. 
+
+For comparison, you can run:
+
+```python
+python3 run_md.py
+```
+
+which doesn't modify the original NonbondedForce at all, which results in dynamics that look perfectly fine when using switching functions.
 
 
 
